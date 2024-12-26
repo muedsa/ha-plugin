@@ -55,7 +55,7 @@ class MediaCatalogService(
                     if (genre != null) {
                         setQueryParameter("genre", genre)
                     }
-                    tags.forEach { addQueryParameter("tag", it) }
+                    tags.forEach { addQueryParameter("tags[]", it) }
                 }
                 .build()
         ).feignChrome()

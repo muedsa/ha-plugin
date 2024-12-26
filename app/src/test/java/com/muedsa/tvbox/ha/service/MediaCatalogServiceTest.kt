@@ -1,6 +1,5 @@
 package com.muedsa.tvbox.ha.service
 
-import com.muedsa.tvbox.api.data.MediaCatalogOption
 import com.muedsa.tvbox.ha.TestOkHttpClient
 import com.muedsa.tvbox.ha.checkMediaCard
 import kotlinx.coroutines.test.runTest
@@ -27,8 +26,12 @@ class MediaCatalogServiceTest {
     @Test
     fun catalog_test() = runTest {
         val config = service.getConfig()
+        val selectedOptions = listOf(
+            config.catalogOptions[0].copy(items = listOf(config.catalogOptions[0].items[0])),
+            config.catalogOptions[1].copy(items = listOf(config.catalogOptions[1].items[5]))
+        )
         val pagingResult = service.catalog(
-            options =  MediaCatalogOption.getDefault(config.catalogOptions),
+            options = selectedOptions,
             loadKey = config.initKey,
             loadSize = config.pageSize
         )
