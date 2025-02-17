@@ -31,3 +31,4 @@ jobs:
           name: build-artifact
           path: |
             ./**/*.apk
+            ./**/*.tbp
