@@ -25,7 +25,16 @@ fun parseHomePageBody(body: Element): List<MediaCardRow> {
     while (i < rowsWrapper.childrenSize()) {
         val child = rowsWrapper.child(i)
         i++
-        if (child.tagName() == "a" && child.childrenSize() > 0) {
+        if (child.hasClass("card-section") && child.childrenSize() > 0) {
+            val rowTitle = child.selectFirst("h3")
+            if (rowTitle != null) {
+                val videosWrapper =
+                    child.selectFirst(".home-rows-videos-wrapper")
+                if (videosWrapper != null) {
+                    list.add(parseRow(rowTitle, videosWrapper))
+                }
+            }
+        } else if (child.tagName() == "a" && child.childrenSize() > 0) {
             val rowTitle = child.selectFirst("h3")
             if (rowTitle != null) {
                 val videosWrapper =
