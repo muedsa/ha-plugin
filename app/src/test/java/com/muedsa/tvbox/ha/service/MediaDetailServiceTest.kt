@@ -6,14 +6,21 @@ import com.muedsa.tvbox.ha.checkMediaCard
 import com.muedsa.tvbox.ha.checkMediaCardRow
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28])
 class MediaDetailServiceTest {
 
+    private val mainScreenService = MainScreenService(okHttpClient = TestOkHttpClient)
     private val service = MediaDetailService(okHttpClient = TestOkHttpClient)
 
     @Test
     fun getDetailData_test() = runTest{
-        val detail = service.getDetailData("17998", "17998")
+        val mediaCard = mainScreenService.getRowsData()[0].list[0]
+        val detail = service.getDetailData(mediaCard.id, mediaCard.detailUrl)
         check(detail.id.isNotEmpty())
         check(detail.title.isNotEmpty())
         check(detail.detailUrl.isNotEmpty())
@@ -40,7 +47,8 @@ class MediaDetailServiceTest {
 
     @Test
     fun getEpisodePlayInfo_test() = runTest{
-        val detail = service.getDetailData("17998", "17998")
+        val mediaCard = mainScreenService.getRowsData()[0].list[0]
+        val detail = service.getDetailData(mediaCard.id, mediaCard.detailUrl)
         check(detail.playSourceList.isNotEmpty())
         check(detail.playSourceList.flatMap { it.episodeList }.isNotEmpty())
         val mediaPlaySource = detail.playSourceList[0]
