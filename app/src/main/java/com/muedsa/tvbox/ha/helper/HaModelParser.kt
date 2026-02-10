@@ -19,41 +19,23 @@ val DigitsPattern = "\\d+".toRegex()
 const val TagOptionPrefix = "tags-"
 
 fun parseHomePageBody(body: Element): List<MediaCardRow> {
-    val list = mutableListOf<MediaCardRow>()
     val rowsWrapper = body.selectFirst(Evaluator.Id("home-rows-wrapper"))!!
-    var i = 0
-    while (i < rowsWrapper.childrenSize()) {
-        val child = rowsWrapper.child(i)
-        i++
-        if (child.hasClass("card-section") && child.childrenSize() > 0) {
-            val rowTitle = child.selectFirst("h3")
-            if (rowTitle != null) {
-                val videosWrapper =
-                    child.selectFirst(".home-rows-videos-wrapper")
-                if (videosWrapper != null) {
-                    list.add(parseRow(rowTitle, videosWrapper))
-                }
-            }
-        } else if (child.tagName() == "a" && child.childrenSize() > 0) {
-            val rowTitle = child.selectFirst("h3")
-            if (rowTitle != null) {
-                val videosWrapper =
-                    child.nextElementSibling()?.selectFirst(".home-rows-videos-wrapper")
-                if (videosWrapper != null) {
-                    list.add(parseRow(rowTitle, videosWrapper))
-                    i++
-                }
-            }
-        }
+    val titleEls = rowsWrapper.filter { it.hasClass("horizontal-row-title") }
+    val list = titleEls.mapNotNull { titleEl ->
+        val rowTitle = titleEl.selectFirst("h3") ?: return@mapNotNull null
+        val videosWrapper = titleEl.nextElementSibling()
+            ?.selectFirst(".home-rows-videos-wrapper")
+            ?: return@mapNotNull null
+        parseRow(rowTitle, videosWrapper)
     }
     return list
 }
 
 private fun parseRow(rowTitle: Element, wrapper: Element): MediaCardRow {
     val title = rowTitle.text().trim()
-    val horizontal = wrapper.selectFirst(".home-rows-videos-div") == null
+    val horizontal = wrapper.hasClass("horizontal-row")
     val cards = if (horizontal)
-        parseRowHorizontalItems(wrapper, ".search-doujin-videos")
+        parseRowHorizontalItems(wrapper)
     else
         parseRowVerticalItems(wrapper)
     return MediaCardRow(
@@ -66,26 +48,22 @@ private fun parseRow(rowTitle: Element, wrapper: Element): MediaCardRow {
 
 private fun parseRowHorizontalItems(
     wrapper: Element,
-    otherCssQuery: String = ""
 ): List<MediaCard> {
     val cards = mutableListOf<MediaCard>()
-    val elements = wrapper.select(".multiple-link-wrapper$otherCssQuery")
+    val elements = wrapper.select(".video-item-container")
     val mediaIdSet = mutableSetOf<String>()
     for (el in elements) {
         val id = el.selectFirst("a[href^=\"https://hanime1.me/watch?v=\"]")
             ?.attr("href")?.toHttpUrlOrNull()?.queryParameter("v")
-        val imgUrl = el.select("img").last()?.attr("src")
-        val title = el.selectFirst(".card-mobile-title")?.text()?.trim()
-        val author = el.selectFirst(".card-mobile-user")?.text()?.trim()
-//        val desc = el.select(".card-mobile-duration").joinToString(" ") {
-//            it.text()
-//        }
+        val imgUrl = el.select("img.main-thumb").last()?.attr("src")
+        val title = el.selectFirst(".title")?.text()?.trim()
+        val subTitle = el.selectFirst(".subtitle")?.text()?.trim()
         if (id != null && imgUrl != null && title != null && !mediaIdSet.contains(id)) {
             cards.add(
                 MediaCard(
                     id = id,
                     title = title,
-                    subTitle = author,
+                    subTitle = subTitle,
                     detailUrl = id,
                     coverImageUrl = imgUrl,
                 )
@@ -156,7 +134,7 @@ fun parseWatchPageBody(body: Element): MediaDetail {
         listOf(
             MediaCardRow(
                 title = title,
-                list = parseRowHorizontalItems(playlistEl, ".related-watch-wrap"),
+                list = parseWatchPageRelatedPlayList(playlistEl),
                 cardWidth = HaConsts.HORIZONTAL_CARD_WIDTH,
                 cardHeight = HaConsts.HORIZONTAL_CARD_HEIGHT,
             )
@@ -198,6 +176,32 @@ fun parseWatchPageBody(body: Element): MediaDetail {
         ),
         rows = rows,
     )
+}
+
+fun parseWatchPageRelatedPlayList(wrapper: Element): List<MediaCard> {
+    val cards = mutableListOf<MediaCard>()
+    val elements = wrapper.select(".related-watch-wrap")
+    val mediaIdSet = mutableSetOf<String>()
+    for (el in elements) {
+        val id = el.selectFirst("a[href^=\"https://hanime1.me/watch?v=\"]")
+            ?.attr("href")?.toHttpUrlOrNull()?.queryParameter("v")
+        val imgUrl = el.select(".card-mobile-panel img").last()?.attr("src")
+        val title = el.selectFirst(".card-mobile-panel .card-mobile-title")?.text()?.trim()
+        val subTitle = el.selectFirst(".card-mobile-panel .card-mobile-genre-wrapper")?.text()?.trim()
+        if (id != null && imgUrl != null && title != null && !mediaIdSet.contains(id)) {
+            cards.add(
+                MediaCard(
+                    id = id,
+                    title = title,
+                    subTitle = subTitle,
+                    detailUrl = id,
+                    coverImageUrl = imgUrl,
+                )
+            )
+            mediaIdSet.add(id)
+        }
+    }
+    return cards
 }
 
 fun parseSearchOptionsFromSearchPage(body: Element): List<MediaCatalogOption> {
@@ -260,7 +264,7 @@ fun parsePagedVideosFromSearchPage(body: Element): Pair<PagingResult<MediaCard>,
     val wrapper = body.selectFirst(Evaluator.Id("home-rows-wrapper"))!!
     val horizontal = wrapper.selectFirst(".home-rows-videos-div") == null
     val cards = if (horizontal)
-        parseRowHorizontalItems(wrapper, ".search-doujin-videos")
+        parseRowHorizontalItems(wrapper)
     else
         parseRowVerticalItems(wrapper)
     val paginationEl = body.selectFirst("ul.pagination[role=\"navigation\"]")
@@ -285,7 +289,7 @@ fun parsePagedVideosFromSearchPage(body: Element): Pair<PagingResult<MediaCard>,
             }
     }
     return Pair(
-        PagingResult<MediaCard>(
+        PagingResult(
             list = cards,
             prevKey = if (page > 1) "${page - 1}" else null,
             nextKey = if (page < maxPage) "${page + 1}" else null
