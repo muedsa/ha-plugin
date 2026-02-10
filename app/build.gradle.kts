@@ -19,12 +19,12 @@ if (keystorePropertiesFile.exists() && keystorePropertiesFile.canRead()) {
 
 android {
     namespace = "com.muedsa.tvbox.ha"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.muedsa.tvbox.ha"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 7
         versionName = "0.0.7"
     }
@@ -62,10 +62,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     // 修改APK文件名
     applicationVariants.all {
         outputs.all {
@@ -75,10 +71,17 @@ android {
         }
     }
 }
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
 dependencies {
     //implementation(libs.androidx.core.ktx)
-    compileOnly(project(":api"))
-    testImplementation(project(":api"))
+    compileOnly(libs.tvbox.api)
+    testImplementation(libs.tvbox.api)
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.test.core)
