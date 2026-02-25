@@ -33,8 +33,8 @@ class MediaCatalogService(
         return MediaCatalogConfig(
             initKey = "1",
             pageSize = 60,
-            cardWidth = HaConsts.VERTICAL_CARD_WIDTH,
-            cardHeight = HaConsts.VERTICAL_CARD_HEIGHT,
+            cardWidth = HaConsts.HORIZONTAL_CARD_WIDTH,
+            cardHeight = HaConsts.HORIZONTAL_CARD_HEIGHT,
             catalogOptions = options
         )
     }

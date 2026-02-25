@@ -33,7 +33,7 @@ class MediaDetailService(
             .checkSuccess()
             .parseHtml()
             .body()
-        return parseWatchPageBody(body)
+        return parseWatchPageBody(mediaId, body)
     }
 
     override suspend fun getEpisodePlayInfo(

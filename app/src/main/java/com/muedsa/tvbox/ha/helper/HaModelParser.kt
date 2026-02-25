@@ -32,7 +32,7 @@ fun parseHomePageBody(body: Element): List<MediaCardRow> {
 }
 
 private fun parseRow(rowTitle: Element, wrapper: Element): MediaCardRow {
-    val title = rowTitle.text().trim()
+    val title = rowTitle.childNode(0).nodeValue().trim()
     val horizontal = wrapper.hasClass("horizontal-row")
     val cards = if (horizontal)
         parseRowHorizontalItems(wrapper)
@@ -99,8 +99,7 @@ private fun parseRowVerticalItems(wrapper: Element): List<MediaCard> {
     return cards
 }
 
-fun parseWatchPageBody(body: Element): MediaDetail {
-    val id = body.selectFirst(Evaluator.Id("video-id"))?.`val`()!!
+fun parseWatchPageBody(id: String, body: Element): MediaDetail {
     val videoEl = body.selectFirst(Evaluator.Id("player"))!!
     val posterImageUrl = videoEl.attr("poster")
     val videoSourceELs = videoEl.select("source[src]")
